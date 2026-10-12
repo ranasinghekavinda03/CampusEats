@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import MenuList from "../components/MenuList";
 import { useDebounce } from "../hooks/useDebounce";
@@ -8,7 +9,22 @@ function MenuPage() {
 
   const debounced = useDebounce(query, 400);
 
-  const { data: dishes, isLoading, error } = useFetch("/menu.json");
+  // Read backend API URL from environment variables
+  const apiBaseUrl = (import.meta.env.VITE_API_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+
+  // Use Railway API when configured.
+  // Otherwise use local JSON for development.
+  const menuUrl = apiBaseUrl
+    ? `${apiBaseUrl}/api/menu`
+    : "/menu.json";
+
+  const {
+    data: dishes,
+    isLoading,
+    error,
+  } = useFetch(menuUrl);
 
   if (isLoading) {
     return <p>Loading menu...</p>;
@@ -18,12 +34,12 @@ function MenuPage() {
     return <p>Could not load menu: {error}</p>;
   }
 
-  const filtered = dishes.filter((dish) =>
+  const filtered = (dishes || []).filter((dish) =>
     dish.name.toLowerCase().includes(debounced.toLowerCase())
   );
 
   return (
-    <div >
+    <div>
       <h1>CampusEats Dashboard</h1>
 
       <input
